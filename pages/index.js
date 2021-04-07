@@ -1,65 +1,98 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+import { 
+  Container, 
+  Box, 
+  Input, 
+  Button, 
+  Text, 
+  FormControl, 
+  FormLabel, 
+  FormHelperText, 
+  InputGroup,
+  InputLeftAddon
+} from '@chakra-ui/react';
+import { Logo } from './../components';
+import firebase from './../config/firebase'
+
+const validationSchema = yup.object().shape({
+  email: yup.string().email('Email inválido').required('Preenchimento obrigatório'),
+  password: yup.string().required('Preenchimento obrigatório'),
+  username: yup.string().required('Preenchimento obrigatório'),
+});
 
 export default function Home() {
+
+  const {
+    values, 
+    errors, 
+    touched, 
+    handleChange, 
+    handleBlur, 
+    handleSubmit,
+    isSubmitting
+  } = useFormik({
+    onSubmit: (values, form) => {
+      console.log(values);
+    },
+    validationSchema,
+    initialValues: {
+      email: '',
+      username: '',
+      password: '',
+    }
+  })
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <Container p={4} centerContent>
+      <Logo />
+      <Box p={4} mt={8}>
+        <Text>Crie sua agenda compartilhada</Text>
+      </Box>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+      <Box>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+        <FormControl id="email" p={4} isRequired>
+          <FormLabel>Email</FormLabel>
+          <Input
+            size="lg" 
+            value={values.email} 
+            type="email" 
+            onChange={handleChange} 
+            onBlur={handleBlur} 
+          />
+          {touched.email && <FormHelperText textColor="#e74c3c">{errors.email}</FormHelperText>}
+        </FormControl>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+        <FormControl id="password" p={4} isRequired>
+          <FormLabel>Senha</FormLabel>
+          <Input
+            size="lg" 
+            value={values.password} 
+            type="password" 
+            onChange={handleChange} 
+            onBlur={handleBlur} />
+          {touched.password && <FormHelperText textColor="#e74c3c">{errors.password}</FormHelperText>}
+        </FormControl>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+          <FormControl id="username" p={4} isRequired>
+            <InputGroup size="lg">
+              <InputLeftAddon children="clocker.work/" />
+              <Input
+                size="lg" 
+                value={values.username} 
+                type="username" 
+                onChange={handleChange} 
+                onBlur={handleBlur} />
+            </InputGroup>
+            {touched.username && <FormHelperText textColor="#e74c3c">{errors.username}</FormHelperText>}
+          </FormControl>
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+        <Box p={4}>          
+          <Button colorScheme="blue" width="100%" onClick={handleSubmit} isLoading={isSubmitting}>Entrar</Button>
+        </Box>
+      </Box>
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
+    </Container>
   )
 }

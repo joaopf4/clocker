@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { useState, useEffect, useContext } from 'react';import { firebaseClient, persistenceMode } from './../../config/firebase/client';
+import { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import { firebaseClient, persistenceMode } from './../../config/firebase/client';
 
 const AuthContext = React.createContext([{}, () => { }]);
 
@@ -7,34 +9,32 @@ export const logout = () => firebaseClient.auth().signOut();
 
 export const login = async ({ email, password}) => {
     firebaseClient.auth().setPersistence(persistenceMode);
-
+    
     try {
         await firebaseClient.auth().signInWithEmailAndPassword(email, password);
+        return firebaseClient.auth().currentUser;
     } catch(error) {
         console.log('LOGIN ERROR:', error);
     }
 };
 
-// const logout = () => {};
-
 export const signup = async ({ email, password, username }) => {
     try {
         await firebaseClient.auth().createUserWithEmailAndPassword(email, password);
-        await login({email, password});
-        // setupProfile(token, username)
+        const user = await login({ email, password });
+        const token = await user.getIdToken();
 
-        // const { data } = await axios({
-        //     method: 'post',
-        //     url: '/api/profile', 
-        //     data: {
-        //       username: values.username
-        //     },
-        //     header: {
-        //       'Authentication': `Bearer ${user.getToken()}`
-        //     }
-        //   });
+        const { data } = await axios({
+            method: 'post',
+            url: '/api/profile', 
+            data: { username },
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+        });
+        console.log(data)
     } catch (error) {
-        console.log('SIGNUP ERROR:', error)
+        console.log('SIGNUP ERROR:', error);
     }
 };
 

@@ -1,4 +1,7 @@
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { 
@@ -11,10 +14,10 @@ import {
   FormLabel, 
   FormHelperText, 
   InputGroup,
-  InputLeftAddon
+  InputLeftAddon,
+  InputRightElement
 } from '@chakra-ui/react';
-import { Logo } from '../components';
-import { firebaseClient } from '../config/firebase/client';
+import { Logo, useAuth } from '../components';
 
 const validationSchema = yup.object().shape({
   email: yup.string().email('Email inválido').required('Preenchimento obrigatório'),
@@ -23,6 +26,10 @@ const validationSchema = yup.object().shape({
 });
 
 export default function Home() {
+  const [auth, { signup }] = useAuth();
+  const router = useRouter();
+  const [show, setShow] = useState(false);
+  const handleClick = () => setShow(!show);
 
   const {
     values, 
@@ -33,21 +40,18 @@ export default function Home() {
     handleSubmit,
     isSubmitting
   } = useFormik({
-    onSubmit: async (values, form) => {
-      try{
-        const user = await firebaseClient.auth().createUserWithEmailAndPassword(values.email, values.password);
-        console.log(user);
-      } catch(error) {
-        console.log('ERROR:', error);
-      }
-    },
+    onSubmit: signup,
     validationSchema,
     initialValues: {
       email: '',
       username: '',
       password: '',
     }
-  })
+  });
+
+  useEffect(() => {
+    auth.user && router.push('/agenda');
+  }, [auth.user]);
 
   return (
     <Container p={4} centerContent>
@@ -72,12 +76,21 @@ export default function Home() {
 
         <FormControl id="password" p={4} isRequired>
           <FormLabel>Senha</FormLabel>
-          <Input
-            size="lg" 
-            value={values.password} 
-            type="password" 
-            onChange={handleChange} 
-            onBlur={handleBlur} />
+          <InputGroup size="lg">
+            <Input
+              size="lg" 
+              value={values.password} 
+              type={show ? "text" : "password"}
+              onChange={handleChange} 
+              onBlur={handleBlur} 
+              placeholder="Min 6 caracteres"
+            />
+            <InputRightElement width="4.5rem">
+              <Button h="1.75rem" size="sm" onClick={handleClick}>
+                  {show ? "Hide" : "Show"}
+              </Button>
+            </InputRightElement>
+          </InputGroup>
           {touched.password && <FormHelperText textColor="#e74c3c">{errors.password}</FormHelperText>}
         </FormControl>
 
@@ -89,7 +102,8 @@ export default function Home() {
                 value={values.username} 
                 type="username" 
                 onChange={handleChange} 
-                onBlur={handleBlur} />
+                onBlur={handleBlur} 
+              />
             </InputGroup>
             {touched.username && <FormHelperText textColor="#e74c3c">{errors.username}</FormHelperText>}
           </FormControl>

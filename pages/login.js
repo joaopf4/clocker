@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -14,16 +15,20 @@ import {
   InputGroup,
   InputRightElement
 } from '@chakra-ui/react';
-import { Logo } from '../Logo';
-import { firebaseClient, persistenceMode } from './../../config/firebase/client';
-import { useEffect } from 'react';
+import { Logo, useAuth } from './../components';
 
 const validationSchema = yup.object().shape({
   email: yup.string().email('Email inválido').required('Preenchimento obrigatório'),
   password: yup.string().required('Preenchimento obrigatório'),
 });
 
-export const Login = () => {
+export default function Login() {
+  const [auth, { login }] = useAuth();
+  const router = useRouter();
+
+  const [show, setShow] = useState(false);
+  const handleClick = () => setShow(!show);
+  
   const {
     values, 
     errors, 
@@ -33,17 +38,7 @@ export const Login = () => {
     handleSubmit,
     isSubmitting
   } = useFormik({
-    onSubmit: async (values, form) => {
-      firebaseClient.auth().setPersistence(persistenceMode);
-
-      try {
-        const user = await firebaseClient.auth().signInWithEmailAndPassword(values.email, values.password);
-        console.log(user);
-        console.log(firebaseClient.auth().currentUser)
-      } catch(error) {
-        console.log('ERROR:', error);
-      }
-    },
+    onSubmit: login,
     validationSchema,
     initialValues: {
       email: '',
@@ -52,13 +47,10 @@ export const Login = () => {
     }
   });
 
-  const [show, setShow] = useState(false);
-  const handleClick = () => setShow(!show);
-
-  // useEffect(() => {
-  //   console.log('Sessao ativa?', firebaseClient.auth().currentUser)
-  // }, [])
-
+  useEffect(() => {
+    auth.user && router.push('/agenda');
+  }, [auth.user]);
+  
   return (
     <Container p={4} centerContent>
       <Logo />
